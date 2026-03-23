@@ -7,6 +7,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <ostream>
+#include "jsoncpp/json/json.h"
+#include "bundle.h"
 
 
 namespace lwc{
@@ -14,6 +16,7 @@ namespace lwc{
     class FileUtil{
     public:
         FileUtil(std::string filename):_filename(filename){}
+        //获取文件上一次修改时间
         time_t LastMTime()
         {
             struct  stat st;
@@ -25,6 +28,7 @@ namespace lwc{
             return st.st_mtime;
             
         }
+        //获取文件最后上传时间，用于以此判断是不是长期未访问文件
         time_t LastATime()
         {
             struct stat st;
@@ -64,7 +68,7 @@ namespace lwc{
             return _filename.substr(pos+1);
         }
 
-        bool SetContent(const std::string &body)
+        bool SentContent(const std::string &body)
         {
             std::ofstream ofs;
             std::cout<<"_filename: "<<_filename<<std::endl;
@@ -79,9 +83,35 @@ namespace lwc{
             return true;
 
         }
-        bool GetPostLen(std::string *body,size_t pos,size_t len)
+        bool GetContent(std::string &body)
+        {
+            GetPostLen(body,0,FileSize());
+        }
+        bool GetPostLen(std::string &body,size_t pos,size_t len)
         {
             size_t fsize=FileSize();
+            if(pos+len>fsize)
+            {
+                std::cout<<"getpostlen failed\n";
+                return false;
+            }
+            std::ifstream ifs;
+            ifs.open(_filename,std::ios::binary);
+            if(ifs.is_open()==false)
+            {
+                std::cout<<"read file failed\n";
+                return false;
+            }
+            ifs.seekg(pos,std::ios::beg);
+            body.resize(len);
+            ifs.read(&body[0],len);
+            if(ifs.good()==false)
+            {
+                std::cout<<"get fail content failed\n";
+                return false;
+            }
+            ifs.close();
+            return true;
         }
         bool ScanDirector(std::vector<std::string> *array)
         {
@@ -99,6 +129,39 @@ namespace lwc{
 
     private:
         std::string _filename;
+    };
+
+    class JsonUtil
+    {
+    public:
+        //将Json::Value对象转换为JSON字符串
+        static bool Serialize(const Json::Value &root,std::string &str)
+        {
+            //创建JSON写入器的工厂
+            Json::StreamWriterBuilder swb;
+            std::unique_ptr<Json::StreamWriter> sw(swb.newStreamWriter());
+
+            std::stringstream ss;
+            sw->write(root,&ss);
+            str=ss.str();
+            return true;
+        }
+
+        static bool UnSerialize(Json::Value *root,std::string &str)
+        {
+            //创建JSON读取器工厂
+            Json::CharReaderBuilder crb;
+            std::unique_ptr<Json::CharReader> cr(crb.newCharReader());
+            std::string err;
+            bool ret=cr->parse(str.c_str(),str.c_str()+str.size(),root,&err);
+            if(ret==false)
+            {
+                std::cout<<"unserialize failed\n";
+                return false;
+            }
+            return true;
+
+        }
     };
 }
 
