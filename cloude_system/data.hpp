@@ -70,6 +70,10 @@ namespace lwc
         {
             pthread_rwlock_wrlock(&_rwlock);
             _table[info.url]=info;
+            //解锁
+            pthread_rwlock_unlock(&_rwlock);
+            //存储到硬盘上
+            storage();
         }
         //获取所有备份信息
         bool GetAll(std::vector<BackupInfo> *array)
@@ -83,7 +87,46 @@ namespace lwc
             pthread_rwlock_unlock(&_rwlock);
             return true;
         }
-
+        bool GetOneByUrl(std::string &url,BackupInfo *info)
+        {
+            pthread_rwlock_wrlock(&_rwlock);
+            auto it=_table.find(url);
+            if(it==_table.end())
+            {
+                pthread_rwlock_unlock(&_rwlock);
+                return false;
+            }
+            *info=it->second;
+            pthread_rwlock_unlock(&_rwlock);
+            return true;
+        }
+        bool GetOneByRealPath(const std::string &realpath, BackupInfo *info)
+        {
+            pthread_rwlock_wrlock(&_rwlock);
+            auto it=_table.begin();
+            for(;it!=_table.end();it++)
+            {
+                if(realpath==it->second.real_path)
+                {
+                    *info=it->second;
+                    pthread_rwlock_unlock(&_rwlock);
+                    return true;
+                }
+                pthread_rwlock_unlock(&_rwlock);
+                return false;
+            
+            }
+        }
+        bool Update(BackupInfo &info)
+        {
+            //加锁，操作_table
+            pthread_rwlock_wrlock(&_rwlock);
+            _table[info.url]=info;
+            //释放锁
+            pthread_rwlock_unlock(&_rwlock);
+            //同步到硬盘
+            storage();
+        }
         bool storage()
         {
             std::vector<BackupInfo> array;
@@ -116,11 +159,10 @@ namespace lwc
         {
             //读取文件
             FileUtil fu(_manager_file);
-            if(fu.Exist()==false)
+            if(fu.Exist())
             {
                 return false;
             }
-            //读取文件全部内容
             std::string body;
             fu.GetContent(body);
             Json::Value root;
@@ -136,9 +178,10 @@ namespace lwc
                 info.real_path=ch["real_path"].asString();
                 info.pack_path=ch["pack_path"].asString();
                 info.url=ch["url"].asString();
-                Insert(info);
+                _table[info.url]=info;
             }
             return true;
+           
         }
     private:
         pthread_rwlock_t _rwlock;

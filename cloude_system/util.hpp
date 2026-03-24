@@ -28,6 +28,13 @@ namespace lwc{
             return st.st_mtime;
             
         }
+        bool Remove()
+        {
+            if(Exist()==false) return true;
+            remove(_filename.c_str());
+            return true;
+        }
+
         //获取文件最后上传时间，用于以此判断是不是长期未访问文件
         time_t LastATime()
         {
@@ -125,6 +132,26 @@ namespace lwc{
                 std::cout<<"get relative_path success\n";
                 return true;
             }
+        }
+
+        bool compress(const std::string packname)
+        {
+            //获取文件
+            std::string body;
+            if(GetContent(body)==false)
+            {
+                return false;
+            }
+            //将获取到的数据进行压缩
+            std::string packed=bundle::pack(bundle::LZIP,body);
+            //将压缩后的数据放进压缩包里
+            FileUtil fu(packname);
+            if(fu.SentContent(packed)==false)
+            {
+                std::cout<<"compress write packed data failed\n";
+                return false;
+            }
+            return true;
         }
 
     private:
