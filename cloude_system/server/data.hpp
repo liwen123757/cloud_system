@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 namespace lwc
 {
     //BackupInfo 结构体--备份信息 存储一个备份文件的全部信息
@@ -43,7 +44,7 @@ namespace lwc
             mtime=fu.LastMTime();
             atime=fu.LastATime();
 
-            this->real_path=realpath;
+            real_path=realpath;
 
             //第四步构造压缩包文件路径
             pack_path=packdir+fu.Filename()+packsuffix;
@@ -57,6 +58,7 @@ namespace lwc
     class DataManager
     {
     public:
+    using ptr=std::shared_ptr<DataManager>;
         DataManager(){
             _manager_file=Config::GetInstance()->GetManagerFile();
             pthread_rwlock_init(&_rwlock,nullptr);
@@ -87,7 +89,7 @@ namespace lwc
             pthread_rwlock_unlock(&_rwlock);
             return true;
         }
-        bool GetOneByUrl(std::string &url,BackupInfo *info)
+        bool GetOneByUrl(const std::string &url,BackupInfo *info)
         {
             pthread_rwlock_wrlock(&_rwlock);
             auto it=_table.find(url);

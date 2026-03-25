@@ -17,7 +17,7 @@ namespace lwc{
             FileUtil tmp1(_back_dir);
             tmp1.CreateDirctory();
 
-            FileUtil tmp2(_back_dir);
+            FileUtil tmp2(_pack_dir);
             tmp2.CreateDirctory();
         }
 
@@ -43,7 +43,7 @@ namespace lwc{
                     //将非热点文件压缩
                     FileUtil tmp(it);
                     tmp.compress(info.pack_path);
-                    //删除源文件，脆瓜文件备份信息
+                    //删除源文件，创建文件备份信息
                     tmp.Remove();
                     info.pack_flag=true;
                     _data->Update(info);

@@ -88,7 +88,6 @@ namespace lwc{
             }
             ofs.write(&body[0],body.size());
             return true;
-
         }
         bool GetContent(std::string &body)
         {
@@ -149,6 +148,25 @@ namespace lwc{
             if(fu.SentContent(packed)==false)
             {
                 std::cout<<"compress write packed data failed\n";
+                return false;
+            }
+            return true;
+        }
+
+        bool uncompress(std::string &filename)
+        {
+            //获取文件内容
+            std::string body;
+            if(GetContent(body)==false)
+            {
+                return false;
+            }
+            std::string unpacked=bundle::unpack(body);
+            //将解压缩后的数据放入新文件
+            FileUtil fu(filename);
+            if(fu.SentContent(unpacked)==false)
+            {
+                std::cout<<"uncompress write unpacked data false\n";
                 return false;
             }
             return true;
