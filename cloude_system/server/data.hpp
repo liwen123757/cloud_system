@@ -76,6 +76,7 @@ namespace lwc
             pthread_rwlock_unlock(&_rwlock);
             //存储到硬盘上
             storage();
+            return true;
         }
         //获取所有备份信息
         bool GetAll(std::vector<BackupInfo> *array)
@@ -128,6 +129,7 @@ namespace lwc
             pthread_rwlock_unlock(&_rwlock);
             //同步到硬盘
             storage();
+            return true;
         }
         bool storage()
         {
@@ -156,6 +158,7 @@ namespace lwc
             JsonUtil::Serialize(root,body);
             FileUtil fu(_manager_file);
             fu.SentContent(body);
+            return true;
         }
         bool InitLoad()
         {

@@ -91,7 +91,7 @@ namespace lwc{
         }
         bool GetContent(std::string &body)
         {
-            GetPostLen(body,0,FileSize());
+            return GetPostLen(body,0,FileSize());
         }
         bool GetPostLen(std::string &body,size_t pos,size_t len)
         {

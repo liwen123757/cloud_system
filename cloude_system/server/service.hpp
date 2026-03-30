@@ -38,6 +38,7 @@ namespace lwc
 
             //监听所有网络接口
             _server.listen("0.0.0.0", _server_port);
+            return true;
         }
     private:
         int _server_port;

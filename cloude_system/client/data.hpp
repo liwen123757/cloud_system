@@ -2,7 +2,6 @@
 #define __M_DATA_H__
 #include <iostream>
 #include "util.hpp"
-#include "config.hpp"
 #include <pthread.h>
 #include <unordered_map>
 #include <vector>

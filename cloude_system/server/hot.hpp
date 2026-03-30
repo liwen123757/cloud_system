@@ -3,7 +3,7 @@
 #include "data.hpp"
 #include "config.hpp"
 
-extern lwc::DataManager *_data;
+// extern lwc::DataManager *_data;
 namespace lwc{
     class HotManager
     {
@@ -52,6 +52,7 @@ namespace lwc{
         }
 
     private:
+        DataManager::ptr _data;
         std::string _back_dir;
         std::string _pack_dir;
         std::string _arc_suffix;
