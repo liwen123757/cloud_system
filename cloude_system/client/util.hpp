@@ -1,213 +1,151 @@
 #ifndef __M_UTIL_H__
 #define __M_UTIL_H__
-
 #include <iostream>
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #include <fstream>
-#include <experimental/filesystem>
+#include <string>
+#include <vector>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <ostream>
-#include "jsoncpp/json/json.h"
-#include "bundle.h"
+#include <experimental/filesystem>
+#include <memory>
+#include <stdio.h>
+#include <filesystem>
 
 
-namespace lwc{
-   namespace fs=std::experimental::filesystem; 
-    class FileUtil{
+namespace lwc
+{
+    namespace fs = std::experimental::filesystem;
+    class FileUtil
+    {
     public:
-        FileUtil(std::string filename):_filename(filename){}
-        //获取文件上一次修改时间
-        time_t LastMTime()
-        {
-            struct  stat st;
-            if(stat(_filename.c_str(),&st)<0)
-            {
-                std::cout<<"get file lastmtime failed!";
-                return -1;
-            }
-            return st.st_mtime;
-            
-        }
+        FileUtil(const std::string filename) : _filename(filename) {}
         bool Remove()
         {
-            if(Exist()==false) return true;
+            if (Exist() == false) return true;
             remove(_filename.c_str());
             return true;
         }
-
-        //获取文件最后上传时间，用于以此判断是不是长期未访问文件
+        size_t FileSize()
+        {
+            struct stat st;
+            if (stat(_filename.c_str(), &st) < 0)
+            {
+                std::cout << "get file size failed" << std::endl;
+                return -1;
+            }
+            return st.st_size;
+        }
+        time_t LastMTime()
+        {
+            struct stat st;
+            if (stat(_filename.c_str(), &st) < 0)
+            {
+                std::cout << "get file lastmtime failed" << std::endl;
+                return -1;
+            }
+            return st.st_mtime;
+        }
         time_t LastATime()
         {
             struct stat st;
-            if(stat(_filename.c_str(),&st)<0)
+            if (stat(_filename.c_str(), &st) < 0)
             {
-                std::cout<<"get file lastatime failed!"<<std::endl;
+                std::cout << "get file lastatime failed" << std::endl;
                 return -1;
             }
             return st.st_atime;
         }
-        bool Exist()
+        std::string FileName()
         {
-            return fs::exists(_filename);
-        }
-        bool CreateDirctory()
-        {
-            if(Exist())
-                return true;
-            return fs::create_directories(_filename);
-        }
-        int64_t FileSize()
-        {
-            struct stat st;
-            if(stat(_filename.c_str(),&st)<0)
-            {
-                std::cout<<"get file failed"<<std::endl;
-            }
-            return st.st_size;
-        }
-        std::string Filename()
-        {
-            int pos=_filename.find_last_of("/");
-            if(pos==std::string::npos)
+            int64_t pos = _filename.find_last_of("\\");
+            if (pos == std::string::npos)
             {
                 return _filename;
             }
-            return _filename.substr(pos+1);
+            return _filename.substr(pos + 1);
         }
-
-        bool SentContent(const std::string &body)
+        bool GetPostLen(std::string& body, size_t pos, size_t len)
         {
-            std::ofstream ofs;
-            std::cout<<"_filename: "<<_filename<<std::endl;
-            ofs.open(_filename,std::ios::binary);
-            if(ofs.is_open()==false)
+            size_t fsize = this->FileSize();
+            if (pos + len > fsize) // 判断要截取的大小是否大于文件
             {
-
-                std::cout<<"write open file failed!\n";
+                std::cout << "get file len error\n";
                 return false;
             }
-            ofs.write(&body[0],body.size());
-            return true;
-        }
-        bool GetContent(std::string &body)
-        {
-            return GetPostLen(body,0,FileSize());
-            
-        }
-        bool GetPostLen(std::string &body,size_t pos,size_t len)
-        {
-            size_t fsize=FileSize();
-            if(pos+len>fsize)
-            {
-                std::cout<<"getpostlen failed\n";
-                return false;
-            }
+
             std::ifstream ifs;
-            ifs.open(_filename,std::ios::binary);
-            if(ifs.is_open()==false)
+            ifs.open(_filename, std::ios::binary);
+            if (ifs.is_open() == false) // 判断文件是否打开成功
             {
-                std::cout<<"read file failed\n";
+                std::cout << "read file open failed\n";
                 return false;
             }
-            ifs.seekg(pos,std::ios::beg);
+            ifs.seekg(pos, std::ios::beg);
             body.resize(len);
-            ifs.read(&body[0],len);
-            if(ifs.good()==false)
+            ifs.read(&body[0], len);
+            if (ifs.good() == false)
             {
-                std::cout<<"get fail content failed\n";
+                std::cout << "get file content failed\n";
+                ifs.close();
                 return false;
             }
             ifs.close();
             return true;
         }
-        bool ScanDirector(std::vector<std::string> *array)
+        bool GetContent(std::string &body)
         {
-            for(auto &p:fs::directory_iterator(_filename))
-            {
-                if(fs::is_directory(p)==true)
-                {
-                    continue;
-                }
-                array->push_back(fs::path().relative_path().string());
-                std::cout<<"get relative_path success\n";
-                return true;
-            }
+            size_t fsize = FileSize();
+            GetPostLen(body, 0, fsize);
+            return true;
         }
-
-        bool compress(const std::string packname)
+        bool SentContent(const std::string& body)
         {
-            //获取文件
-            std::string body;
-            if(GetContent(body)==false)
+            std::ofstream ofs;
+            ofs.open(_filename, std::ios::binary);
+            if (ofs.is_open() == false)
             {
+                std::cout << "write open file failed\n";
                 return false;
             }
-            //将获取到的数据进行压缩
-            std::string packed=bundle::pack(bundle::LZIP,body);
-            //将压缩后的数据放进压缩包里
-            FileUtil fu(packname);
-            if(fu.SentContent(packed)==false)
+            ofs.write(&body[0], body.size());
+            if (ofs.good() == false)
             {
-                std::cout<<"compress write packed data failed\n";
+                std::cout << "write file content failed\n";
+                ofs.close();
                 return false;
             }
+            ofs.close();
             return true;
         }
 
-        bool uncompress(std::string &filename)
+        bool Exist()
         {
-            //获取文件内容
-            std::string body;
-            if(GetContent(body)==false)
+            return fs::exists(_filename);
+        }
+        bool CreateDirectory()
+        {
+            if (Exist())
+                return true;
+            return fs::create_directories(_filename);
+        }
+        bool ScanDirector(std::vector<std::string>* array)
+        {
+            CreateDirectory();
+            for (auto& p : fs::directory_iterator(_filename))
             {
-                return false;
-            }
-            std::string unpacked=bundle::unpack(body);
-            //将解压缩后的数据放入新文件
-            FileUtil fu(filename);
-            if(fu.SentContent(unpacked)==false)
-            {
-                std::cout<<"uncompress write unpacked data false\n";
-                return false;
+                if (fs::is_directory(p) == true)
+                {
+                    continue;
+                }
+                
+                array->push_back(fs::path(p).relative_path().string()); //relative_path带有路径的文件名
             }
             return true;
         }
 
     private:
         std::string _filename;
-    };
-
-    class JsonUtil
-    {
-    public:
-        //将Json::Value对象转换为JSON字符串
-        static bool Serialize(const Json::Value &root,std::string &str)
-        {
-            //创建JSON写入器的工厂
-            Json::StreamWriterBuilder swb;
-            std::unique_ptr<Json::StreamWriter> sw(swb.newStreamWriter());
-
-            std::stringstream ss;
-            sw->write(root,&ss);
-            str=ss.str();
-            return true;
-        }
-
-        static bool UnSerialize(Json::Value *root,std::string &str)
-        {
-            //创建JSON读取器工厂
-            Json::CharReaderBuilder crb;
-            std::unique_ptr<Json::CharReader> cr(crb.newCharReader());
-            std::string err;
-            bool ret=cr->parse(str.c_str(),str.c_str()+str.size(),root,&err);
-            if(ret==false)
-            {
-                std::cout<<"unserialize failed\n";
-                return false;
-            }
-            return true;
-
-        }
     };
 }
 

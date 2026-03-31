@@ -40,6 +40,7 @@ namespace lwc
             _table[key]=value;
             //同步到硬盘
             storage();
+            return true;
         }
         bool storage()
         {

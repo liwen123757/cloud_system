@@ -2,8 +2,8 @@
 #define __M__HOT_H__
 #include "data.hpp"
 #include "config.hpp"
-
-// extern lwc::DataManager *_data;
+#include <unistd.h>
+extern lwc::DataManager *_data;
 namespace lwc{
     class HotManager
     {
@@ -48,11 +48,13 @@ namespace lwc{
                     info.pack_flag=true;
                     _data->Update(info);
                 }
+                sleep(1);
             }
+            return true;
         }
 
     private:
-        DataManager::ptr _data;
+        // DataManager::ptr _data;
         std::string _back_dir;
         std::string _pack_dir;
         std::string _arc_suffix;

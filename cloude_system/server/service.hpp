@@ -1,5 +1,5 @@
-#ifndef __M_SERVER_H__
-#define __M_SERVER_H__
+#ifndef __M_SERVICE_H__
+#define __M_SERVICE_H__
 #include "config.hpp"
 #include "util.hpp"
 #include "httplib.h"

@@ -62,6 +62,7 @@ namespace lwc{
             if(stat(_filename.c_str(),&st)<0)
             {
                 std::cout<<"get file failed"<<std::endl;
+                return -1;
             }
             return st.st_size;
         }
@@ -129,8 +130,8 @@ namespace lwc{
                 }
                 array->push_back(fs::path().relative_path().string());
                 std::cout<<"get relative_path success\n";
-                return true;
             }
+            return true;
         }
 
         bool compress(const std::string packname)

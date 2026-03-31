@@ -94,6 +94,7 @@ namespace lwc{
             _back_dir=root["back_dir"].asString();
             _pack_dir=root["pack_dir"].asString();
             _manager_file=root["manager_file"].asString();
+            return true;
         }
     };
     //静态成员变量类外初始化

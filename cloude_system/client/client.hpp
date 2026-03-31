@@ -1,15 +1,15 @@
-#ifdef __M_CLINET_H__
-#define __M_CLINET_H__
+#ifndef __M_CLIENT_H__
+#define __M_CLIENT_H__
 #include "data.hpp"
-#include "util.hpp"
-// #include "windows.h"
-namespace lwc
+#include <vector>
+#include "httplib.h"
+namespace lwc 
 {
-    #define SERVER_ADDR "43.139.140.92"
-    #define SERVER_PORT 9090
-    class Backup
-    {
-    public:
+#define SERVER_ADDR "43.139.140.92"
+#define SERVER_PORT 9090
+	class Backup 
+	{
+	public:
 		Backup(const std::string backdir,const std::string back_file)
 			:_back_dir(backdir) {
 			_data = new DataManager(back_file);
@@ -21,20 +21,41 @@ namespace lwc
 			ss << fu.FileName() << "-" << fu.FileSize() << "-" << fu.LastMTime();
 			return ss.str();
 		}
-		bool Upload(const std::string& filename)
+		/* bool Upload(const std::string& filename)
+		{
+			//1. 获取文件数据
+			FileUtil fu(filename);
+			std::string body;
+			fu.GetContent(body);
+
+			// 准备上传数据
+			httplib::UploadFormDataItems items = {
+				{"file", body, fu.FileName(), "application/octet-stream"}
+			};
+
+			httplib::Client client(SERVER_ADDR, SERVER_PORT);
+			auto res = client.Post("/upload", items);
+			if (!res || res->status != 200)
+			{
+				return false;
+			}
+			return true;
+			
+		} */
+		 bool Upload(const std::string& filename)
 		{
 			//1.获取文件数据
 			FileUtil fu(filename);
 			std::string body;
-			fu.GetContent(&body);
+			fu.GetContent(body);
 			//2.搭建http客户端上传文件数据
 			httplib::Client client(SERVER_ADDR, SERVER_PORT);
-			httplib::MultipartFormData item;
+			httplib::UploadFormData item;
 			item.content = body;
 			item.filename = fu.FileName();
 			item.name = "file";
 			item.content_type = "application/octet-stream";//octet-stream二进制流数据
-			httplib::MultipartFormDataItems items;
+			httplib::UploadFormDataItems items;
 			items.push_back(item);
 			auto res = client.Post("/upload", items);
 			if (!res || res->status != 200)
@@ -64,10 +85,11 @@ namespace lwc
 			if (time(NULL) - fu.LastMTime() < 3) {//三秒钟之内被修改过
 				return false;
 			}
-			std::cout << filename << "need upload" << std::endl;
+			std::cout << filename <<" "<< "need upload" << std::endl;
 			return true;
-        }
-        bool RunModule() 
+			
+		}
+		bool RunModule() 
 		{
 			while (1)
 			{
@@ -87,16 +109,17 @@ namespace lwc
 					{
 						std::string id = GetFileIdentifier(ch);//创建唯一标识
 						_data->Insert(ch, id);//新增文件备份信息
-						std::cout << ch << "upload success" << std::endl;
+						std::cout << ch <<" "<< "upload success" << std::endl;
 					}
 				}
-				Sleep(1);
+				usleep(5);
 			}
 			return true;
 		}
 	private:
 		std::string _back_dir;
 		DataManager* _data;
-    };
+
+	};
 }
 #endif

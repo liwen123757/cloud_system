@@ -1,10 +1,12 @@
 #include "util.hpp"
 #include "data.hpp"
 #include "client.hpp"
+#include "httplib.h"
 #define BACKUP_FILE "./backup.dat"
 #define BACKUP_DIR	"./backup/"
 int main()
 {
+	// using namespace lwc;
 	/*lwc::FileUtil fu("./");
 	std::vector<std::string> arry;
 	fu.ScanDirector(&arry);
@@ -18,5 +20,7 @@ int main()
 	data.GetOneByKey(".\\cloud.cpp", &str);
 	std::cout << str << std::endl;*/
     
+    lwc::Backup backup(BACKUP_DIR,BACKUP_FILE);
+    backup.RunModule();
 	return 0;
 }
