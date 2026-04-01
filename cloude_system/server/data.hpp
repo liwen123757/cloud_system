@@ -115,20 +115,31 @@ namespace lwc
                     pthread_rwlock_unlock(&_rwlock);
                     return true;
                 }
-                pthread_rwlock_unlock(&_rwlock);
-                return false;
-            
             }
+            pthread_rwlock_unlock(&_rwlock);
+            return false;
         }
         bool Update(BackupInfo &info)
         {
-            //加锁，操作_table
+            // 检查 BackupInfo 的完整性
+            if (info.real_path.empty() || info.pack_path.empty() || info.url.empty()) {
+                std::cerr << "Update failed: BackupInfo is incomplete." << std::endl;
+                return false;
+            }
+
+            // 加锁，操作 _table
             pthread_rwlock_wrlock(&_rwlock);
             _table[info.url]=info;
             //释放锁
             pthread_rwlock_unlock(&_rwlock);
-            //同步到硬盘
-            storage();
+
+            // 同步到硬盘
+            if (!storage()) {
+                std::cerr << "Update failed: storage error." << std::endl;
+                return false;
+            }
+
+            std::cout << "Update success: " << info.url << std::endl;
             return true;
         }
         bool storage()
@@ -157,14 +168,19 @@ namespace lwc
             std::string body;
             JsonUtil::Serialize(root,body);
             FileUtil fu(_manager_file);
-            fu.SentContent(body);
+            if (!fu.SentContent(body)) {
+                std::cerr << "Storage failed: Unable to write to " << _manager_file << std::endl;
+                return false;
+            }
+
+            std::cout << "Storage success: Data written to " << _manager_file << std::endl;
             return true;
         }
         bool InitLoad()
         {
             //读取文件
             FileUtil fu(_manager_file);
-            if(fu.Exist())
+            if(fu.Exist()==false)
             {
                 return false;
             }
@@ -177,9 +193,9 @@ namespace lwc
                 BackupInfo info;
                 //从JSON中提取字段，转换为BackupInfo
                 info.pack_flag=ch["pack_flag"].asBool();
-                info.fsize=ch["fsize"].asInt();
-                info.mtime=ch["mtime"].asInt();
-                info.atime=ch["atime"].asInt();
+                info.fsize=ch["fsize"].asInt64();
+                info.mtime=ch["mtime"].asInt64();
+                info.atime=ch["atime"].asInt64();
                 info.real_path=ch["real_path"].asString();
                 info.pack_path=ch["pack_path"].asString();
                 info.url=ch["url"].asString();

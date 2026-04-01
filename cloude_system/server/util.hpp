@@ -128,7 +128,7 @@ namespace lwc{
                 {
                     continue;
                 }
-                array->push_back(fs::path().relative_path().string());
+                array->push_back(fs::path(p).relative_path().string());
                 std::cout<<"get relative_path success\n";
             }
             return true;

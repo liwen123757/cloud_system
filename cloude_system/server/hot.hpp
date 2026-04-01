@@ -36,13 +36,16 @@ namespace lwc{
                     }
                     //获取文件备份信息
                     BackupInfo info;
-                    if(_data->GetOneByRealPath(it,&info))
+                    if(_data->GetOneByRealPath(it,&info)==false)
                     {
                         info.NewBackupInfo(it);//设置一个新的备份信息出来
                     }
                     //将非热点文件压缩
                     FileUtil tmp(it);
-                    tmp.compress(info.pack_path);
+                    if(tmp.compress(info.pack_path)==false)
+                    {
+                        continue;
+                    }
                     //删除源文件，创建文件备份信息
                     tmp.Remove();
                     info.pack_flag=true;

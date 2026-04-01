@@ -1,0 +1,11 @@
+[
+	{
+		"atime" : 1775007925,
+		"fsize" : 15,
+		"mtime" : 1775007925,
+		"pack_flag" : false,
+		"pack_path" : "./packdir/test.txt.lz",
+		"real_path" : "./backdir/test.txt",
+		"url" : "/dowmload/test.txt"
+	}
+]
