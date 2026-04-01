@@ -115,10 +115,9 @@ namespace lwc
                     pthread_rwlock_unlock(&_rwlock);
                     return true;
                 }
-                pthread_rwlock_unlock(&_rwlock);
-                return false;
-            
             }
+            pthread_rwlock_unlock(&_rwlock);
+            return false;
         }
         bool Update(BackupInfo &info)
         {
@@ -164,14 +163,20 @@ namespace lwc
         {
             //读取文件
             FileUtil fu(_manager_file);
-            if(fu.Exist())
+            if(fu.Exist()==false)
+            {
+                return true;
+            }
+            std::string body;
+            if (fu.GetContent(body) == false || body.empty())
+            {
+                return true;
+            }
+            Json::Value root;
+            if (JsonUtil::UnSerialize(&root,body) == false)
             {
                 return false;
             }
-            std::string body;
-            fu.GetContent(body);
-            Json::Value root;
-            JsonUtil::UnSerialize(&root,body);
             for(auto ch:root)
             {
                 BackupInfo info;

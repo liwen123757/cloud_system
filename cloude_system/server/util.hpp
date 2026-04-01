@@ -62,6 +62,7 @@ namespace lwc{
             if(stat(_filename.c_str(),&st)<0)
             {
                 std::cout<<"get file failed"<<std::endl;
+                return -1;
             }
             return st.st_size;
         }
@@ -91,7 +92,12 @@ namespace lwc{
         }
         bool GetContent(std::string &body)
         {
-            return GetPostLen(body,0,FileSize());
+            int64_t fsize = FileSize();
+            if (fsize < 0)
+            {
+                return false;
+            }
+            return GetPostLen(body,0,fsize);
         }
         bool GetPostLen(std::string &body,size_t pos,size_t len)
         {
@@ -127,10 +133,9 @@ namespace lwc{
                 {
                     continue;
                 }
-                array->push_back(fs::path().relative_path().string());
-                std::cout<<"get relative_path success\n";
-                return true;
+                array->push_back(p.path().string());
             }
+            return true;
         }
 
         bool compress(const std::string packname)

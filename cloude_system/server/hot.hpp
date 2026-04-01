@@ -2,8 +2,9 @@
 #define __M__HOT_H__
 #include "data.hpp"
 #include "config.hpp"
+#include <unistd.h>
 
-// extern lwc::DataManager *_data;
+extern lwc::DataManager *_data;
 namespace lwc{
     class HotManager
     {
@@ -36,7 +37,7 @@ namespace lwc{
                     }
                     //获取文件备份信息
                     BackupInfo info;
-                    if(_data->GetOneByRealPath(it,&info))
+                    if(_data->GetOneByRealPath(it,&info) == false)
                     {
                         info.NewBackupInfo(it);//设置一个新的备份信息出来
                     }
@@ -48,11 +49,12 @@ namespace lwc{
                     info.pack_flag=true;
                     _data->Update(info);
                 }
+                sleep(1);
             }
+            return true;
         }
 
     private:
-        DataManager::ptr _data;
         std::string _back_dir;
         std::string _pack_dir;
         std::string _arc_suffix;

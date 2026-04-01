@@ -85,7 +85,10 @@ namespace lwc{
                 return false;
             }
             Json::Value root;
-            JsonUtil::UnSerialize(&root,body);
+            if (JsonUtil::UnSerialize(&root,body) == false)
+            {
+                return false;
+            }
             _hot_time=root["hot_time"].asInt();
             _server_ip=root["server_ip"].asString();
             _server_port=root["server_port"].asInt();
@@ -94,6 +97,7 @@ namespace lwc{
             _back_dir=root["back_dir"].asString();
             _pack_dir=root["pack_dir"].asString();
             _manager_file=root["manager_file"].asString();
+            return true;
         }
     };
     //静态成员变量类外初始化

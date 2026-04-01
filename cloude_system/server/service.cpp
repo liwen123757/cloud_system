@@ -3,37 +3,23 @@
 #include "data.hpp"
 #include "hot.hpp"
 #include "service.hpp"
-void FileUtilTest(const std::string &filename)
-{
-    /* lwc::FileUtil fu(filename);
-    std::cout << fu.FileSize() << std::endl;
-    std::cout << fu.LastMTime() << std::endl;
-    std::cout << fu.LastATime() << std::endl;
-    std::cout << fu.Filename() << std::endl; */
-    lwc::FileUtil fu(filename);
-    std::string body;
-    fu.GetContent(body);
-    lwc::FileUtil nfu("./hello.txt");
-    nfu.SentContent(body);
-    return;
-    //std::string packname = filename + ".lz";
-    // lw::FileUtil fu(filename);
-    // fu.Compress(packname);
-    // lw::FileUtil pfu(packname);
-    // pfu.UnCompress("hello.txt");
-    // lw::FileUtil fu(filename);
-    // fu.CreateDirectory();
-    // std::vector<std::string> arry;
-    // fu.ScanDirector(&arry);
-    // for (auto &arr : arry)
-    // {
-    //     std::cout << arr << std::endl;
-    // }
-    //return;
-}
+#include <thread>
+
+lwc::DataManager *_data = nullptr;
+std::mutex lwc::Config::_mutex;
 
 int main()
 {
-    FileUtilTest("./test.txt");
+    lwc::Config *config = lwc::Config::GetInstance();
+    (void)config;
+    _data = new lwc::DataManager();
+
+    lwc::Server srv;
+    lwc::HotManager hot;
+    std::thread thread_srv(&lwc::Server::RunModule, &srv);
+    std::thread thread_hot(&lwc::HotManager::RunModule, &hot);
+
+    thread_srv.join();
+    thread_hot.join();
     return 0;
 }
